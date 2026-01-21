@@ -1,50 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitorowanie odpowiedzi molekularnej</title>
+    <title>Wykres BCR-ABL</title>
+    <!-- Load Chart.js and the Annotation Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Load date adapter for Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
     <style>
         body {
-            font-family: "Times New Roman", Times, serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Times New Roman', Times, serif;
             margin: 0;
-        }
-        .chart-container {
-            width: 90%;
-            max-width: 1000px;
-            background: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: #001529; /* Deep Navy Blue */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        h1, h2 {
-            text-align: center;
-            color: #333;
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            background-color: #001529;
+            padding: 20px;
+            box-sizing: border-box;
         }
         h1 {
-            font-size: 24px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
             margin-bottom: 5px;
+            text-transform: uppercase;
         }
         h2 {
-            font-size: 16px;
-            margin-top: 0;
+            text-align: center;
+            font-size: 18px;
             font-weight: normal;
+            color: #6facdc; /* Light blue */
+            margin-top: 0;
             margin-bottom: 20px;
+        }
+        .chart-subtitle {
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .chart-legend-note {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 20px;
+            color: #cccccc;
+        }
+        canvas {
+            background-color: #001529; /* Match body */
         }
     </style>
 </head>
 <body>
-    <div class="chart-container">
-        <h1>Monitorowanie odpowiedzi molekularnej</h1>
-        <h2>znormalizowana liczba kopii transkryptu BCR::ABL p210 (IS-NCN [%])</h2>
+    <div class="container">
+        <h1>MONITOROWANIE ODPOWIEDZI MOLEKULARNEJ</h1>
+        <h2>Przebieg leczenia pacjenta inhibitorami kinazy tyrozynowej (TKI) i osiągnięte odpowiedzi molekularne</h2>
+
+        <div class="chart-subtitle">znormalizowana liczba kopii transkryptu BCR::ABL p210 (IS-NCN [%])</div>
+        <div class="chart-legend-note">(MMR - major molecular response, MR - molecular response test)</div>
+
         <canvas id="myChart"></canvas>
     </div>
     <script src="script.js"></script>

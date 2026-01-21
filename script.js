@@ -1,4 +1,5 @@
 
+// Inlined data for portability
 const rawData = [
   {"date": "2018-04-12", "value": 32.5},
   {"date": "2018-09-11", "value": null},
@@ -37,135 +38,258 @@ const rawData = [
   {"date": "2025-11-26", "value": 0.006}
 ];
 
-// Handle 0 values by mapping them to a small number for log scale, e.g., 0.0001
-const chartData = rawData.map(d => {
+// Preprocess data: handle nulls and 0s for log scale
+// Log scale cannot show 0. We'll clamp 0 to 0.001 (MR5 level) for visualization
+const processedData = rawData.map(d => {
+    if (d.value === null) return null; // Skip nulls
+    let val = d.value;
+    if (val === 0) val = 0.001;
     return {
         x: d.date,
-        y: d.value === 0 ? 0.0001 : d.value
+        y: val
     };
-}).filter(d => d.y !== null);
+}).filter(d => d !== null);
+
+// Chart.js global defaults for font
+Chart.defaults.font.family = "'Times New Roman', Times, serif";
+Chart.defaults.color = '#ffffff';
+Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)'; // Grid lines
 
 const ctx = document.getElementById('myChart').getContext('2d');
 
-const myChart = new Chart(ctx, {
+// Plugin to draw background area colors
+// We define the regions based on user input
+const annotations = {
+    imatynib: {
+        type: 'box',
+        xMin: '2018-04-01', // Extended to start of data
+        xMax: '2019-11-01',
+        backgroundColor: 'rgba(0, 128, 128, 0.3)', // Teal
+        borderWidth: 0,
+        label: {
+            display: true,
+            content: 'imatynib',
+            color: 'white',
+            font: { size: 14, weight: 'bold' },
+            position: 'start',
+            yAdjust: 10
+        }
+    },
+    dasatynib: {
+        type: 'box',
+        xMin: '2019-11-01',
+        xMax: '2023-06-01',
+        backgroundColor: 'rgba(0, 128, 0, 0.3)', // Green
+        borderWidth: 0,
+        label: {
+            display: true,
+            content: 'dasatynib',
+            color: 'white',
+            font: { size: 14, weight: 'bold' },
+            position: 'start',
+            yAdjust: 10
+        }
+    },
+    nilotynib: {
+        type: 'box',
+        xMin: '2023-06-01',
+        xMax: '2023-07-01',
+        backgroundColor: 'rgba(255, 215, 0, 0.3)', // Yellow
+        borderWidth: 0,
+        label: {
+            display: true,
+            content: 'nilotynib',
+            color: 'white',
+            font: { size: 12, weight: 'bold' }, // Smaller font for narrow region
+            position: 'start',
+            yAdjust: 10,
+            rotation: -90
+        }
+    },
+    bosutynib: {
+        type: 'box',
+        xMin: '2023-07-01',
+        xMax: '2025-03-01',
+        backgroundColor: 'rgba(255, 140, 0, 0.3)', // Orange
+        borderWidth: 0,
+        label: {
+            display: true,
+            content: 'bosutynib',
+            color: 'white',
+            font: { size: 14, weight: 'bold' },
+            position: 'start',
+            yAdjust: 10
+        }
+    },
+    asciminib: {
+        type: 'box',
+        xMin: '2025-03-01',
+        xMax: '2026-01-01', // Extend to future
+        backgroundColor: 'rgba(200, 0, 0, 0.3)', // Red
+        borderWidth: 0,
+        label: {
+            display: true,
+            content: 'asciminib',
+            color: 'white',
+            font: { size: 14, weight: 'bold' },
+            position: 'start',
+            yAdjust: 10
+        }
+    },
+    // Reference Lines
+    lineMMR: {
+        type: 'line',
+        yMin: 0.1,
+        yMax: 0.1,
+        borderColor: 'rgba(255, 255, 255, 0.7)',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        label: {
+            display: true,
+            content: '(MMR) 0.100',
+            position: 'start',
+            backgroundColor: 'rgba(0,0,0,0)',
+            color: 'white',
+            font: { size: 10 },
+            xAdjust: 5,
+            yAdjust: -10
+        }
+    },
+    lineMR4: {
+        type: 'line',
+        yMin: 0.01,
+        yMax: 0.01,
+        borderColor: 'rgba(255, 255, 255, 0.7)',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        label: {
+            display: true,
+            content: '(MR4) 0.010',
+            position: 'start',
+            backgroundColor: 'rgba(0,0,0,0)',
+            color: 'white',
+            font: { size: 10 },
+            xAdjust: 5,
+            yAdjust: -10
+        }
+    },
+    lineMR45: {
+        type: 'line',
+        yMin: 0.0032,
+        yMax: 0.0032,
+        borderColor: 'rgba(255, 255, 255, 0.7)',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        label: {
+            display: true,
+            content: '(MR4.5) 0.0032',
+            position: 'start',
+            backgroundColor: 'rgba(0,0,0,0)',
+            color: 'white',
+            font: { size: 10 },
+            xAdjust: 5,
+            yAdjust: -10
+        }
+    }
+};
+
+new Chart(ctx, {
     type: 'line',
     data: {
         datasets: [{
             label: 'IS-NCN [%]',
-            data: chartData,
-            borderColor: 'blue',
-            borderWidth: 1,
-            pointBackgroundColor: 'white',
-            pointBorderColor: 'blue',
-            pointRadius: 3,
+            data: processedData,
+            borderColor: '#33b5e5', // Light Blue line
+            backgroundColor: '#33b5e5',
+            pointStyle: 'rectRot', // Square-ish
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2,
             fill: false,
-            tension: 0
+            tension: 0.1
         }]
     },
     options: {
         responsive: true,
-        plugins: {
-            legend: {
-                display: false
-            },
-            annotation: {
-                annotations: {
-                    mmr: {
-                        type: 'line',
-                        yMin: 0.1,
-                        yMax: 0.1,
-                        borderColor: 'black',
-                        borderWidth: 1,
-                        borderDash: [5, 5],
-                        label: {
-                            display: false // We will use custom ticks or separate labels if needed
-                        }
-                    },
-                    mr4: {
-                        type: 'line',
-                        yMin: 0.01,
-                        yMax: 0.01,
-                        borderColor: 'black',
-                        borderWidth: 1,
-                        borderDash: [5, 5]
-                    },
-                    mr45: {
-                        type: 'line',
-                        yMin: 0.0032,
-                        yMax: 0.0032,
-                        borderColor: 'black',
-                        borderWidth: 1,
-                        borderDash: [5, 5]
-                    },
-                    mr5: {
-                        type: 'line',
-                        yMin: 0.001,
-                        yMax: 0.001,
-                        borderColor: 'black',
-                        borderWidth: 1,
-                        borderDash: [5, 5]
-                    }
-                }
+        maintainAspectRatio: false, // Allow height adjustment via CSS
+        layout: {
+            padding: {
+                top: 30, // Space for labels
+                right: 20,
+                bottom: 20,
+                left: 10
             }
         },
         scales: {
             x: {
                 type: 'time',
                 time: {
-                    unit: 'day',
+                    unit: 'month',
                     displayFormats: {
-                        day: 'yyyy-MM-dd'
+                        month: 'yyyy-MM-dd' // Show full date on ticks if space allows, or custom
                     },
-                    parser: 'yyyy-MM-dd'
+                    tooltipFormat: 'yyyy-MM-dd'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
                 },
                 ticks: {
                     source: 'data',
-                    maxRotation: 45,
+                    color: 'white',
+                    maxRotation: 90,
                     minRotation: 45,
-                    autoSkip: true,
-                    maxTicksLimit: 20
+                    autoSkip: false, // Try to show all, or use true if too crowded
                 },
-                grid: {
+                title: {
                     display: true,
-                    color: '#eee'
+                    text: 'Data',
+                    color: 'white',
+                    font: { size: 14 }
                 }
             },
             y: {
                 type: 'logarithmic',
-                min: 0.0001, // allow going lower to show the dip
-                max: 2000,
+                min: 0.001,
+                max: 1000,
                 grid: {
-                    color: '#eee'
+                    color: 'rgba(255, 255, 255, 0.1)'
                 },
                 ticks: {
+                    color: 'white',
                     callback: function(value, index, values) {
-                        if (value === 1000) return '1000.000';
-                        if (value === 100) return '100.000';
-                        if (value === 10) return '10.000';
-                        if (value === 1) return '1.000';
-                        if (value === 0.1) return '(MMR) 0.100';
-                        if (value === 0.01) return '(MR4) 0.010';
-                        if (value === 0.0032) return '(MR4.5) 0.0032';
-                        if (value === 0.001) return '(MR5) 0.001';
-                        // Handle the 0 replacement
-                        if (value === 0.0001) return '0';
+                        // Custom ticks matching reference
+                        const niceValues = [1000, 100, 10, 1, 0.1, 0.01, 0.001];
+                        if (niceValues.includes(value)) {
+                            return value.toString(); // e.g. "100"
+                        }
                         return null;
-                    },
-                    autoSkip: false,
-                    maxTicksLimit: 20
+                    }
                 },
-                afterBuildTicks: function(scale) {
-                    scale.ticks = [
-                        {value: 1000},
-                        {value: 100},
-                        {value: 10},
-                        {value: 1},
-                        {value: 0.1},
-                        {value: 0.01},
-                        {value: 0.0032},
-                        {value: 0.001},
-                        {value: 0.0001} // for the 0
-                    ];
+                title: {
+                    display: true,
+                    text: 'IS-NCN [%]',
+                    color: 'white',
+                    font: { size: 14 }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false // Hide default legend
+            },
+            annotation: {
+                annotations: annotations
+            },
+            datalabels: {
+                color: 'white',
+                align: 'top',
+                offset: 4,
+                font: {
+                    size: 11
+                },
+                formatter: function(value, context) {
+                    let v = value.y;
+                    return v;
                 }
             }
         }
