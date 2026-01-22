@@ -1,5 +1,5 @@
 
-// Inlined data for portability
+// Inlined data for portability - PRECISELY THE SAME as requested
 const rawData = [
   {"date": "2018-04-12", "value": 32.5},
   {"date": "2018-09-11", "value": null},
@@ -41,14 +41,18 @@ const rawData = [
 // Preprocess data: handle nulls and 0s for log scale
 // Log scale cannot show 0. We'll clamp 0 to 0.001 (MR5 level) for visualization
 const processedData = rawData.map(d => {
-    if (d.value === null) return null; // Skip nulls
+    // Keep nulls so they appear on the axis as gaps/ticks
+    if (d.value === null) {
+        return { x: d.date, y: null };
+    }
     let val = d.value;
+    // Log scale 0 handling
     if (val === 0) val = 0.001;
     return {
         x: d.date,
         y: val
     };
-}).filter(d => d !== null);
+});
 
 // Chart.js global defaults for font
 Chart.defaults.font.family = "'Times New Roman', Times, serif";
@@ -58,7 +62,6 @@ Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)'; // Grid lines
 const ctx = document.getElementById('myChart').getContext('2d');
 
 // Plugin to draw background area colors
-// We define the regions based on user input
 const annotations = {
     imatynib: {
         type: 'box',
@@ -206,15 +209,16 @@ new Chart(ctx, {
             pointHoverRadius: 7,
             borderWidth: 2,
             fill: false,
-            tension: 0.1
+            tension: 0.1,
+            spanGaps: false // Do not connect lines over null values
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false, // Allow height adjustment via CSS
+        maintainAspectRatio: false,
         layout: {
             padding: {
-                top: 30, // Space for labels
+                top: 30,
                 right: 20,
                 bottom: 20,
                 left: 10
@@ -226,7 +230,7 @@ new Chart(ctx, {
                 time: {
                     unit: 'month',
                     displayFormats: {
-                        month: 'yyyy-MM-dd' // Show full date on ticks if space allows, or custom
+                        month: 'yyyy-MM-dd'
                     },
                     tooltipFormat: 'yyyy-MM-dd'
                 },
@@ -234,11 +238,11 @@ new Chart(ctx, {
                     color: 'rgba(255, 255, 255, 0.1)'
                 },
                 ticks: {
-                    source: 'data',
+                    source: 'data', // Important: use ticks from the data points
                     color: 'white',
                     maxRotation: 90,
                     minRotation: 45,
-                    autoSkip: false, // Try to show all, or use true if too crowded
+                    autoSkip: false // Show all data dates
                 },
                 title: {
                     display: true,
@@ -257,10 +261,9 @@ new Chart(ctx, {
                 ticks: {
                     color: 'white',
                     callback: function(value, index, values) {
-                        // Custom ticks matching reference
                         const niceValues = [1000, 100, 10, 1, 0.1, 0.01, 0.001];
                         if (niceValues.includes(value)) {
-                            return value.toString(); // e.g. "100"
+                            return value.toString();
                         }
                         return null;
                     }
@@ -275,7 +278,7 @@ new Chart(ctx, {
         },
         plugins: {
             legend: {
-                display: false // Hide default legend
+                display: false
             },
             annotation: {
                 annotations: annotations
@@ -288,8 +291,8 @@ new Chart(ctx, {
                     size: 11
                 },
                 formatter: function(value, context) {
-                    let v = value.y;
-                    return v;
+                    if (value.y === null) return '';
+                    return value.y;
                 }
             }
         }
