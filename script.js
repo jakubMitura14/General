@@ -218,10 +218,10 @@ new Chart(ctx, {
         maintainAspectRatio: false,
         layout: {
             padding: {
-                top: 30,
-                right: 20,
-                bottom: 20,
-                left: 10
+                top: 10,
+                right: 10,
+                bottom: 10,
+                left: 5
             }
         },
         scales: {
